@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, Dimensions, Animated } from 'react-native';
+import { useTabBar } from '../contexts/TabBarProvider';
 import Tab from './Tab';
 
 const { width } = Dimensions.get('screen');
@@ -9,6 +10,10 @@ const TabBar = ({ state, navigation }) => {
   const { routes } = state;
   const renderColor = currentTab => (currentTab === selected ? 'red' : 'black');
 
+  const { showTabBar } = useTabBar();
+
+  const animation = useRef(new Animated.Value(0)).current;
+
   const handlePress = (activeTab, index) => {
     if (state.index !== index) {
       setSelected(activeTab);
@@ -16,9 +21,31 @@ const TabBar = ({ state, navigation }) => {
     }
   };
 
+  const toggleTabBarAnimation = () => {
+    if (showTabBar) {
+      Animated.timing(animation, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(animation, {
+        toValue: 100,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
+
+  useEffect(() => {
+    toggleTabBarAnimation();
+  }, [showTabBar]);
+
   return (
     <View style={styles.wrapper}>
-      <View style={styles.container}>
+      <Animated.View
+        style={[styles.container, { transform: [{ translateY: animation }] }]}
+      >
         {routes.map((route, index) => (
           <Tab
             tab={route}
@@ -28,7 +55,7 @@ const TabBar = ({ state, navigation }) => {
             key={route.key}
           />
         ))}
-      </View>
+      </Animated.View>
     </View>
   );
 };
